@@ -1,14 +1,18 @@
 package projector
 
-import "path"
+import (
+	"encoding/json"
+	"os"
+	"path"
+)
 
 type Data struct {
 	Projector map[string]map[string]string `json:"projector`
 }
 
 type Projector struct {
-	config Config
-	data   Data
+	config *Config
+	data   *Data
 }
 
 func (p *Projector) GetValue(key string) (string, bool) {
@@ -58,4 +62,49 @@ func (p *Projector) GetValueAll() map[string]string {
 	}
 
 	return out
+}
+
+func (p *Projector) SetValue(key, value string) {
+	pwd := p.config.Pwd
+
+	if _, ok := p.data.Projector[pwd]; !ok {
+		p.data.Projector[pwd] = map[string]string{}
+	}
+
+	p.data.Projector[pwd][key] = value
+}
+
+func (p *Projector) RemoveValue(key string) {
+	if dir, ok := p.data.Projector[p.config.Pwd]; !ok {
+		delete(dir, key)
+	}
+}
+
+func defaultProjector(config *Config) *Projector {
+	return &Projector{
+		config: config,
+		data: &Data{
+			Projector: map[string]map[string]string{},
+		},
+	}
+}
+
+func NewProjector(config *Config) *Projector {
+	if _, err := os.Stat(config.Config); err != nil {
+		contents, err := os.ReadFile(config.Config)
+		if err != nil {
+			return defaultProjector(config)
+		}
+
+		var data Data
+		err = json.Unmarshal(contents, &data)
+		if err != nil {
+			return defaultProjector(config)
+		}
+		return &Projector{
+			data:   &data,
+			config: config,
+		}
+	}
+	return defaultProjector(config)
 }
