@@ -7,12 +7,19 @@ import (
 )
 
 type Data struct {
-	Projector map[string]map[string]string `json:"projector`
+	Projector map[string]map[string]string `json:"projector"`
 }
 
 type Projector struct {
 	config *Config
 	data   *Data
+}
+
+func CreateProjector(config *Config, data *Data) *Projector {
+	return &Projector{
+		config: config,
+		data:   data,
+	}
 }
 
 func (p *Projector) GetValue(key string) (string, bool) {
@@ -75,7 +82,7 @@ func (p *Projector) SetValue(key, value string) {
 }
 
 func (p *Projector) RemoveValue(key string) {
-	if dir, ok := p.data.Projector[p.config.Pwd]; !ok {
+	if dir, ok := p.data.Projector[p.config.Pwd]; ok {
 		delete(dir, key)
 	}
 }
